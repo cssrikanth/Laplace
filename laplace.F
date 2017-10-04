@@ -1,41 +1,22 @@
 !
 !
-!  Solves a nonlinear system in parallel with a user-defined
-!  Newton method that uses KSP to solve the linearized Newton sytems.  This solver
-!  is a very simplistic inexact Newton method.  The intent of this code is to
-!  demonstrate the repeated solution of linear sytems with the same nonzero pattern.
 
 !
 !  The command line options include:
-!  -par <parameter>, where <parameter> indicates the problem's nonlinearity
-!     problem SFI:  <parameter> = Bratu parameter (0 <= par <= 6.81)
+
+
 !  -mx <xg>, where <xg> = number of grid points in the x-direction
 !  -my <yg>, where <yg> = number of grid points in the y-direction
 !  -Nx <npx>, where <npx> = number of processors in the x-direction
 !  -Ny <npy>, where <npy> = number of processors in the y-direction
-!  -mf use matrix free for matrix vector product
+
 !
-!/*T
-!   Concepts: KSP^writing a user-defined nonlinear solver
-!   Concepts: DMDA^using distributed arrays
-!   Processors: n
-!T*/
-!  ------------------------------------------------------------------------
-!
-!    Solid Fuel Ignition (SFI) problem.  This problem is modeled by
-!    the partial differential equation
-!
-!            -Laplacian u - lambda*exp(u) = 0,  0 < x,y < 1,
-!
-!    with boundary conditions
-!
-!             u = 0  for  x = 0, x = 1, y = 0, y = 1.
-!
+
+
 !    A finite difference approximation with the usual 5-point stencil
-!    is used to discretize the boundary value problem to obtain a nonlinear
-!    system of equations.
+!    is used to discretize.
 !
-!    The SNES version of this problem is:  snes/examples/tutorials/ex5f.F
+
 !
 !  -------------------------------------------------------------------------
 
@@ -62,6 +43,7 @@
 
       MPI_Comm comm
       Vec      X,Y,F,localX,Fold,Fnew
+      Vec      diff
       Mat      J,B
       DM       da
       KSP      ksp
@@ -71,12 +53,12 @@
       common   /mycommon/ mx,my,B,localX,da
 !
 !
-!      This is the routine to use for matrix-free approach
+
 !
 
 
 !     --------------- Data to define nonlinear solver --------------
-      PetscReal   rtol,ttol,error
+      PetscReal   tol,error
       PetscReal   fnorm,ynorm,xnorm,fnorm1
       PetscInt            max_nonlin_its,one
       PetscInt            lin_its,ncount
@@ -85,8 +67,7 @@
       PetscErrorCode ierr
 
       mone           = -1.0
-      rtol           = 1.e-8
-      max_nonlin_its = 100
+      tol           = 1.e-5
       one            = 1
       ifive          = 5
       ithree         = 3
@@ -97,8 +78,8 @@
 !  Initialize problem parameters
 
 !
-      mx = 4
-      my = 4
+      mx = 100
+      my = 100
       call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
      &                        '-mx',mx,flg,ierr)
       call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
@@ -109,15 +90,7 @@
       call PetscOptionsHasName(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
      &                         '-no_output',nooutput,ierr)
 
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!     Create linear solver context
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-      call KSPCreate(comm,ksp,ierr)
-
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!     Create vector data structures
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 !
 !  Create distributed array (DMDA) to manage parallel grid and vectors
@@ -142,16 +115,11 @@
        call VecDuplicate(X,Y,ierr)
        call VecDuplicate(X,Fold,ierr)
        call VecDuplicate(X,Fnew,ierr)
+       
 
 
 
 
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!     Customize linear solver set runtime options
-!  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!
-!     Set runtime options (e.g., -ksp_monitor -ksp_rtol <rtol> -ksp_type <type>)
-!
 
 !  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Evaluate initial guess
@@ -160,10 +128,8 @@
        call FormInitialGuess(X,ierr)
        call ComputeFunction(X,F,ierr)
        call VecNorm(F,NORM_2,fnorm,ierr)
-       ttol = fnorm*rtol
-       if (.not. nooutput) then
-         print*, 'Initial function norm ',fnorm
-       endif
+       
+    
 !       call VecView(F,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
 !
@@ -179,39 +145,40 @@
 !         call VecNorm(X,NORM_2,xnorm,ierr)
          
 
-
+         
          call VecCopy(F,Fold,ierr)
 !         call VecView(Fold,PETSC_VIEWER_STDOUT_WORLD,ierr)
+         
          call ComputeFunction(Fold,F,ierr)
+!         print*,'new F'
 !         call VecView(F,PETSC_VIEWER_STDOUT_WORLD,ierr)
-!         call VecAXPY(Fold,-1,F,ierr)
-!         call VecView(Fold,PETSC_VIEWER_STDOUT_WORLD,ierr)
-         call VecNorm(F,NORM_1,fnorm1,ierr)
-!         call VecNorm(Fnew,NORM_1,fnorm,ierr)
-         error = fnorm1
+         call VecAXPY(Fold,mone,F,ierr)
+!         print*,'diff F'
+!         call VecView(F,PETSC_VIEWER_STDOUT_WORLD,ierr)
+         call VecNorm(Fold,NORM_1,fnorm1,ierr)
+         call VecNorm(F,NORM_1,fnorm,ierr)
+         error = fnorm1/fnorm
          
 !         call VecView(Fold,PETSC_VIEWER_STDOUT_WORLD,ierr)
          print *,error
 
-!         if (.not. nooutput) then
-!           print*, 'Iteration ',ncount,' function norm',fnorm
-!         endif
-!         ncount=ncount+1
+         
 !         print *,ncount,fnorm
 !  Test for convergence
 
-!       if (fnorm .le. ttol) then
-!         if (.not. nooutput) then
-!           print*,'Converged: function norm ',fnorm,' tolerance ',ttol
-!         endif
-!         exit
-!       endif
+       if (error .le. tol) then
+         if (.not. nooutput) then
+           print*,'Converged: function norm ',error
+         endif
+         exit
+       endif
+       ncount=ncount+1
  10   continue
  20   continue
 
-      write(6,100) i+1
- 100  format('Number of SNES iterations =',I2)
-!       call VecView(X,PETSC_VIEWER_STDOUT_WORLD,ierr)
+      write(6,100) ncount
+ 100  format('Number iterations =',I4)
+!       call VecView(F,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
 !  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Free work space.  All PETSc objects should be destroyed when they
@@ -301,7 +268,7 @@
 	  elseif (i .eq. mx-1 .or. j .eq. my-1) then
             xx(idx+row) = 30
           else
-            xx(idx+row) = 10.0
+            xx(idx+row) = 0.0
           endif
          
           
