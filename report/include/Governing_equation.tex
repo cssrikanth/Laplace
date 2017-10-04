@@ -3,33 +3,13 @@
 \chapter{Governing Equations and Solution methods}
 
 \section{Governing Equations}
-\subsection{Heat equation}The unsteady heat equation in 1D solved in this code is given below,
+\subsection{Laplace equation}The Laplace equation in 2D solved in this code is given below,
 \begin{equation}\label{eq:uhe}
-\frac{\partial T}{\partial t} = \alpha \frac{\partial^2 T}{\partial x^2}
+ \frac{\partial^2 T}{\partial x^2}+\frac{\partial^2 T}{\partial y^2} = 0
 \end{equation}
 
-$T$ is temperature and $x$ and $t$ represent the spatial and temporal coordinates respectively. Here Thermal Diffusivity $\alpha$ is a constant and is set to $1.9\times 10^-5\hspace{0.2cm} m^2/s$.
+$T$ is any physical variable like Temperature etc., and $x$ and $t$ represent the spatial coordinates.
 
-\subsection{Heat equation for Method of manufactured solutions(MMS)}
-Consider a manufactured solution for $T$,
-\begin{equation}\label{c2}
-    T(x,t)=e^{-t} sin(\pi x)
-\end{equation}
-Applying the manufactured solution to the governing equation,
-\begin{equation}\label{c3}
-\begin{gathered}
-    \frac{\partial T}{\partial t}=-e^{-t} sin(\pi x)\\
-    \frac{\partial^2 T}{\partial x^2}=-e^{-t} \pi^2 sin(\pi x)
-\end{gathered}
-\end{equation}
-Using equations (\ref{eq:uhe} and \ref{c3}) the obtained source term is,
-\begin{equation}\label{c4}
-Q=e^{-t}sin(\pi x) (\alpha \pi^2-1)
-\end{equation}
-Using (\ref{c4}) the governing equation with (\ref{c2}) as the solution is written as,
-\begin{equation}\label{c5}
-\frac{\partial T}{\partial t}-\alpha\frac{\partial^2 T}{\partial x^2}=Q
-\end{equation}
 
 
 
@@ -37,55 +17,20 @@ Using (\ref{c4}) the governing equation with (\ref{c2}) as the solution is writt
 
 
 \section{Numerical Method}
-\hspace{0.25cm}The governing equation can be in general represented as,
-\begin{equation}\label{eq:210}
-   \frac{\partial Q}{\partial t}+\frac{\partial F_j}{\partial x_j}=Q_s
-\end{equation}
+\hspace{0.25cm}The governing equation can be discretised using finite difference method and the final equation is expressed below. 
 
-Here, $Q$, $F$ and $Q_s$ represent the unsteady term ,flux term and the source term respectively. 
-
-For unsteady heat equation,
+A standard 5 point stencil is represented by, 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{figures/stencil.png}
+\caption{five point stencil}
+\label{fig:rline}
+\end{figure}
+Using the above representation, the final equation can be written as,
 \begin{equation}
-   Q=\begin{bmatrix}
-   T
-   \end{bmatrix},F=\begin{bmatrix}
-    -\alpha\frac{\partial T}{\partial x_j}\\
-   \end{bmatrix}
+         T_{i,j}+\frac{1}{4}(T_{i,j+1}+T_{i,j-1}+T_{i,j+1}+T_{i,j-1}) 
 \end{equation}
 
-\subsection{Finite Volume Method}
-Equation (\ref{eq:210}) is integrated over an arbitrary Control Volume  V,
-\begin{equation}\label{eq:int}
-    \int_V\frac{\partial Q}{\partial t}\,dV +\int_V\frac{\partial F_j}{\partial x_j}\,dV=\int_VQ_s\,dV
-\end{equation}
-Further Gauss theorem is applied to the flux part thereby solving it over the Control surface  and cell average 
-$\overline{Q}$ is used to represent the unsteady term.
-
-\begin{equation}\label{eq:gc}
-    \frac{\partial \overline{Q}}{\partial t}V+ \int_S  F_j.\,dA_j = \overline{Q_s} V
-\end{equation}
-The surface integral in equation (\ref{eq:gc}) can be further approximated using the areas of the control surfaces and the average face flux.
-\begin{equation}\label{eq:ahf}
-    \frac{\partial \overline{Q}}{\partial t}V +  \sum\limits_{i=1}^{faces}  F_j^i.\,A_j^i = \overline{Q_s} V \hspace{1cm} A_j=n_j A
-\end{equation}
-
-
-
-The equation (\ref{eq:ahf}) is further integrated over time $t$ for temperature $T$,
-\begin{equation}\label{eq:atime}
-   \int_t \frac{\partial \overline{T}}{\partial t}V\,dt = \alpha \int_V \sum\limits_{i=1}^{faces}  \frac{\partial T}{\partial x_j}^i\,A_j^i\,dt+\int_t \overline{Q_s}V\,dt 
-\end{equation}
-The equation is averaged over time,
-
-\begin{equation}\label{eq:atimen}
-   (\overline{T}^{n+1}-\overline{T}^n)V = \alpha \int_V \sum\limits_{i=1}^{faces}  \frac{\partial T}{\partial x_j}^i\,A_j^i\,dt+\int_t \overline{Q_s}V\,dt 
-\end{equation}
-Further first order Euler explicit method which is a forward time marching scheme is used as the time scheme,
-\begin{equation}\label{eq:final}
-   \overline{T}^{n+1} =\overline{T}^n+ \frac{\alpha \Delta{t} }{V}  \sum\limits_{i=1}^{faces}  (\frac{\partial T}{\partial x_j}^i)^n\,A_j^i+\overline{Q_s} \Delta{t}
-\end{equation}
-
-Equation (\ref{eq:final}) is further reduced to its 1D form which essentially can be seen as finite difference method discretization. Further, Central differencing is applied for the flux term.
 
     
 
