@@ -1,0 +1,95 @@
+% CREATED BY DAVID FRISK, 2015
+
+% IMPORT SETTINGS
+\documentclass[11pt,a4paper,twoside]{report}
+\input{include/settings/Settings}
+\usepackage{graphicx}
+\usepackage{lipsum,etoolbox}% http://ctan.org/pkg/{lipsum,etoolbox}
+\usepackage{acro}
+\usepackage[acronym]{glossaries}
+\usepackage{amsmath,tabularx}
+\usepackage{siunitx}
+\usepackage[utf8]{inputenc}
+\usepackage{nomencl}
+
+
+ 
+\makenomenclature
+
+
+
+\begin{document} 
+
+% COVER PAGE, TITLE PAGE AND IMPRINT PAGE
+\pagenumbering{roman}			% Roman numbering (starting with i (one)) until first main chapter
+\input{include/frontmatter/Titlepage}
+%\newpage
+%\restoregeometry
+%\thispagestyle{empty}
+%\mbox{}
+% ABSTRACT
+
+%\addcontentsline{toc}{chapter}{Abstract}
+%\input{include/frontmatter/Abstract}
+%\newpage
+%\let\cleardoublepage\clearpage
+
+%\newpage
+%\input{Acknowledgements}
+
+%nomenclature
+%\input{include/frontmatter/nomenclature}
+
+%\input{include/front}
+
+% TABLE OF CONTENTS
+%\cleardoublepage
+%\newpage
+\tableofcontents
+\let\cleardoublepage\clearpage
+
+
+% START OF MAIN DOCUMENT
+\cleardoublepage
+\setcounter{page}{1}
+\pagenumbering{arabic}			% Arabic numbering starting from 1 (one)
+\setlength{\parskip}{0pt plus 1pt}
+
+ %INTRODUCTION
+%\input{include/Introduction}
+
+\input{include/Governing_equation}
+
+%\input{include/pdds}
+
+%\input{include/mms}
+
+
+\input{include/initial}
+
+% THEORY
+\input{include/Geometry}
+
+% METHODS
+
+% RESULTS
+%\input{include/Results}
+
+% CONCLUSION
+
+% REFERENCES / BIBLIOGRAPHY
+\cleardoublepage
+\addcontentsline{toc}{chapter}{Bibliography}
+%\input{References}
+
+% APPENDICES
+\cleardoublepage
+%\appendix
+\setcounter{secnumdepth}{0}
+%\input{include/backmatter/Appendix_1}
+
+
+
+
+
+\end{document}

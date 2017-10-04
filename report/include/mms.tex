@@ -1,0 +1,101 @@
+\chapter{Method of Manufactured Solutions (MMS)}
+\label{ch:mmsd}
+\hspace{0.25cm}Method of Manufactured solutions is one of the most sophisticated code verification methods available in the field of computational science and engineering \cite{codemms}. The main idea behind this method is to manufacture a solution for a flow variable using a continuous function instead of obtaining an exact solution. This manufactured solution need not be physically realistic since code verification is purely a mathematical procedure. Using the manufactured solution a source term is derived for the governing equation. Now, this governing equation is solved using numerical methods and compared with the existing known manufactured solution. Therefore, this method could also be seen as a problem solved backward. \\
+For example, consider a function,
+\begin{equation}\label{41}
+    F(a)=0
+\end{equation}
+Now, say $a=u$ in (\ref{41}),
+\begin{equation}\label{42}
+    F(u)\neq0
+\end{equation}
+It is not necessary for $u$ to be a solution for (\ref{41}), therefore consider (\ref{42}) to be equal to a source term $Q$,
+\begin{equation}\label{442}
+    F(u)=Q
+\end{equation}
+\begin{equation}\label{43}
+    F(a)=Q
+\end{equation}
+Now, $a=u$ is a solution for (\ref{43}). This is the fundamental idea behind the method of manufactured solutions.
+\section{General procedure of MMS}
+\hspace{0.25cm}The following steps are used to obtain the observed order of accuracy required to verify the code,
+\\
+
+
+\begin{equation}
+\frac{\partial (\rho k_u)}{\partial t}+\frac{\partial (\rho k_u <V_j>)}{\partial x_j}=P_k-\beta^*k_u w_u+\frac{\partial}{\partial x_j}(\Gamma_{k_u}\frac{\partial k_u}{\partial x_j})
+\end{equation}
+\begin{equation}
+\begin{split}
+\frac{\partial (\rho \omega_u)}{\partial t}+\frac{\partial (\rho \omega_u <V_j>)}{\partial x_j}=\frac{\gamma}{\nu_u}P_k-(\frac{1}{f_\omega}-1)\frac{\gamma\beta^*}{\nu_u}\omega_uk_u-\\\frac{\beta\rho\omega_u^2}{f_\omega}+(1-F_{1u})2\rho\sigma_{w2}\frac{f_\omega}{f_k}\frac{1}{\omega_u}\frac{\partial k_u}{\partial x_j}\frac{\partial \omega_u}{\partial x_j}+\frac{\partial}{\partial x_j}(\Gamma_{\omega_u}\frac{\partial \omega_u}{\partial x_j})
+\end{split}
+\end{equation}
+\begin{itemize}
+  \item Determine the governing equations.
+  \item Construct a manufactured solution.
+  \item Use the solution to compute the source term to modify the governing equations.
+  \item Obtain initial and boundary conditions using the manufactured solution.
+  \item Setup a case by obtaining a grid to the domain and define suitable parameters like time step etc.
+  \item Perform simulations for the modified equations on multiple mesh levels.
+  \item Obtain the global discretization error of the numerical solutions.
+  \item Conduct the order of accuracy test using the solution to determine if the observed order of accuracy matches the formal order of accuracy.
+\end{itemize}
+\newpage
+An example of MMS using 1D unsteady heat equation is provided in appendix \ref{app=mms}.
+\section{Manufactured Solutions}
+\hspace{0.25cm}To ensure the accuracy of the code verification procedure special care has to be taken to obtain the manufactured solution. Some of them are mentioned below,\\
+\begin{itemize}
+  \item The considered manufactured solution should contain smooth analytic functions which ensure that the obtained solution will match the formal order of accuracy.
+  \item The solution should have a sufficient number of non-trivial derivatives. For example, in momentum equation, if the manufactured solution for velocity is linear and if the diffusion term is solved using a second-order method, it would lead to incorrect predictions of the observed order of accuracy.
+  \item The manufactured solution derivatives should be bounded by a constant to ensure that the solution is not varying strongly in space and time. Also, this ensures that the solution does not contain any singularities.
+  \item The chosen solution should be realistic when pertaining to a particular flow variable. For example, if the physics of the problem demands positive temperature, the obtained manufactured solution must be compatible.\\
+\end{itemize} 
+The following are the manufactured solutions used in this thesis,
+\begin{equation}\label{eq:44}
+\begin{gathered}
+    T(x,y,z,t)=e^{4\pi^2t}cos^2(2\pi x)cos^2(2\pi y)cos^2(2\pi z)\\
+    u(x,y,z,t)=((0.5cos(\pi x)cos(\pi y)cos(\pi z)cos(\pi t))+0.5)\\
+    v(x,y,z,t)=((0.25sin(\pi x)sin(\pi y)cos(\pi z)cos(\pi t))+0.5)\\
+    w(x,y,z,t)=((0.25sin(\pi x)cos(\pi y)sin(\pi z)cos(\pi t))+0.5)\\
+    p(x,y,z,t)=((cos(\pi x)cos(\pi y)cos(\pi z)cos(\pi t))+0.5)\\
+\end{gathered}
+\end{equation}
+The velocity solutions are obtained in a way as to satisfy the continuity equation. 
+\section{Initial and boundary conditions}
+\hspace{0.25cm}Initial solution is obtained using the manufactured solutions in (\ref{eq:44}). A solution for a differential equation can be obtained using different types of boundary conditions. Using this principle, the boundary values are obtained from the manufactured solutions. For example, consider a case where the code obtains a solution using Dirichlet boundary condition on one of the boundary faces. This implementation can be directly performed and compared using the manufactured solutions. If the same solution is required using a Neumann condition on the same face, the values can be directly obtained from the derivatives of the manufactured solutions. 
+\section{Discretization error}
+\hspace{0.25cm}The normalized global discretization error of the obtained numerical solution and manufactured solution is obtained by employing $L_2$ norm,\\
+\begin{equation}
+\begin{gathered}
+\label{eq:l2norm}
+L_{2,i}=\Big(\frac{\sum_{n=1}^{N}|f_{i,n}-f_{exact,n}|^2}{N}\Big)^{1/2}
+\end{gathered}
+\end{equation}
+Here, $i$ is for a particular mesh level.
+\newpage
+\section{Strengths and Limitations of MMS}
+Some of the strengths of MMS are,\\
+\begin{itemize}
+  \item Most of the coding options can be verified using this method.
+  \item It has the capability to handle nonlinear and coupled equations.
+  \item It can be used to detect mistakes in the solution algorithm.
+  \item It works equally well for finite difference, finite volume and finite element schemes.
+\end{itemize} 
+\vspace{0.4cm}
+Some of the limitations are,\\
+\begin{itemize}
+  \item It is required to change the source code in order to accommodate the changes in the governing equations. The changes include the source term, initial, and boundary condition terms. Therefore, this process cannot be conducted as a black box analysis.
+  \item To test other model options in the code, it's required to change the source term which can be time-consuming.
+  \item The solutions are assumed to be smooth in the domain. Therefore, it is challenging to obtain manufactured solutions in cases involving discontinuities (shock waves, etc.).
+\end{itemize}
+\begin{comment}
+\section{Grid configurations for MMS}
+The main objective of using this method in this project is to test the robustness and accuracy of the numerical scheme with different mesh qualities. To achieve this, a set of systematically refined grids are generated and  in each case, the code will be tested. This test is further conducted for several grid configurations which involve skewness, non-orthogonality, and curvature (see figure ). 
+\subsection{Non-orthogonality}
+\subsection{Grid skewness}
+
+\section{Observed order of accuracy}
+\end{comment}
+
+
+

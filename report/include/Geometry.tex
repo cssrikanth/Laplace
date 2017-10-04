@@ -1,0 +1,38 @@
+% CREATED BY DAVID FRISK, 2015
+\chapter{Directions to use the code}
+\section{General instructions}
+The following points directs the user on how to compile and use the 1D Fortran code.
+\\
+
+\begin{itemize}
+  \item Unzip the folder contents.
+  \item The user must have already installed Fortran and Python compilers.
+  \item Consult the Makefile for general compiling information.
+  \item Type "make clean" to remove any already compiled files.
+  \item Open "global.f95" file.
+  \item Enter the details required to set up the case in that particular file.
+  \item Type "make" to compile.
+  \item Type "./heat" to execute the case.
+  \item Text files are generated in the same folder.
+  \item To post process, type "make output\_script.py".
+  \item A list of text files available to post process is generated in the terminal.
+  \item Choose for which time the user wants to display the plot.
+  \item Type that particular time(the entire number) without the .txt extension.
+  \item The plot is saved in the folder which can be viewed.
+  \item To view another plot type "yes" and enter the time.
+  \item To run another case with the compiled code type "make remove", make the changes in the global file and then type "make.
+  \item To view the MMS results, change the value in the global file to "1"
+  \item MMS results can be directly compared with the analytical results(for MMS) in the terminal.
+\end{itemize}
+
+\section{To note}
+
+\begin{itemize}
+  \item The code has some minor bugs but it should work as long as the stability criterion for explicit Euler is met.
+  \item MMS is showing stability issues with the code which is natural due to the usage of explicit Euler. 
+  \item For this reason, more work has to be done to better the MMS implementation but the working can be generally understood.
+  \item It has to be considered that this a very small implementation and a base for improving it's efficiency. 
+  
+  
+\end{itemize}
+

@@ -1,0 +1,12 @@
+% CREATED BY DAVID FRISK, 2015
+\chapter{Introduction}
+\hspace{0.25cm}Partially averaged Navier Stokes(PANS) is a growing variable resolution turbulence closure model. It has an ability to capture scales that vary from Direct numerical Simulations(DNS) and Reynolds Averaged Navier Stokes(RANS). The equations for PANS are obtained from the traditional RANS equations. A new parameter which is the ratio of unresolved turbulent quantities to the total turbulent quantities is defined in this method. This is the only the only term that differentiates PANS from RANS and DNS. The original RANS equations are converted to PANS using this parameter and the closure models are solved for the unresolved turbulent quantities. Therefore, lower value of this parameter directs PANS to DNS and the higher to RANS.\\
+
+
+\hspace{0.25cm}In this age of computational fluid dynamics(CFD) where more accurate turbulence models are needed to capture complex flow patterns, there is a requirement of developing more accurate turbulence models and methods. RANS generally is not computationally expensive but it fails provide desired results. On the other hand, DNS provides almost exact results but at a huge computational cost. Therefore, there is a need for turbulence models which provide reasonable results for realistic computational resources. PANS tries to achieve that\cite{giri}.\\
+
+
+
+\hspace{0.25cm}This report presents the implementation of PANS for k-$\omega$ SST turbulence model in OpenFOAM. This implementation is initially described through governing equations. Further, it is tested on a Surface mounted cube case. The further section describes the geometry and different grids used for this case. A description of the boundary conditions and numerical schemes is also given in this section. Finally, the results obtained for several cases is presented. A comparison of the obtained results with the experimental plots is presented.
+
+
