@@ -1,12 +1,48 @@
 % CREATED BY DAVID FRISK, 2015
 \chapter{Introduction}
-\hspace{0.25cm}Partially averaged Navier Stokes(PANS) is a growing variable resolution turbulence closure model. It has an ability to capture scales that vary from Direct numerical Simulations(DNS) and Reynolds Averaged Navier Stokes(RANS). The equations for PANS are obtained from the traditional RANS equations. A new parameter which is the ratio of unresolved turbulent quantities to the total turbulent quantities is defined in this method. This is the only the only term that differentiates PANS from RANS and DNS. The original RANS equations are converted to PANS using this parameter and the closure models are solved for the unresolved turbulent quantities. Therefore, lower value of this parameter directs PANS to DNS and the higher to RANS.\\
+\hspace{0.25cm}This report provides a brief introduction and usage of PETSc. Portable, Extensible Toolkit for Scientific Computation (PETSc) is a library containing routines useful in the domain of Scientific computing. It uses Message passing interface (MPI) for parallel communications. PETSc contains several libraries(\ref{fig:lib}) which manipulate a set of objects(Vectors,Matrices etc.,). A large number of customizable linear and non linear solvers, Pre-conditioners, time steppers are available at hand to ease the process of scientific code development. 
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{report/figures/library.png}
+\caption{Numerical libraries of PETSc \cite{petsc}}
+\label{fig:lib}
+\end{figure}
+
+\hspace{0.25cm} The succeeding content will describe the implementation of PETSc on a 2D Laplace equation. Further, the code with its accompanying terminologies is briefly explained.  
 
 
-\hspace{0.25cm}In this age of computational fluid dynamics(CFD) where more accurate turbulence models are needed to capture complex flow patterns, there is a requirement of developing more accurate turbulence models and methods. RANS generally is not computationally expensive but it fails provide desired results. On the other hand, DNS provides almost exact results but at a huge computational cost. Therefore, there is a need for turbulence models which provide reasonable results for realistic computational resources. PANS tries to achieve that\cite{giri}.\\
+\section{Laplace equation}
+\hspace{0.25cm}The Laplace equation in 2D solved in this code is given below,
+\begin{equation}\label{eq:uhe}
+ \frac{\partial^2 T}{\partial x^2}+\frac{\partial^2 T}{\partial y^2} = 0
+\end{equation}
+
+\hspace{0.25cm}$T$ is any physical variable like Temperature etc., and $x$ and $t$ represent the spatial coordinates.
 
 
 
-\hspace{0.25cm}This report presents the implementation of PANS for k-$\omega$ SST turbulence model in OpenFOAM. This implementation is initially described through governing equations. Further, it is tested on a Surface mounted cube case. The further section describes the geometry and different grids used for this case. A description of the boundary conditions and numerical schemes is also given in this section. Finally, the results obtained for several cases is presented. A comparison of the obtained results with the experimental plots is presented.
+
+
+
+
+\section{Numerical Method}
+\hspace{0.25cm}The governing equation is discretised using finite difference method and the final equation is expressed below. 
+
+\hspace{0.25cm}A standard 5 point stencil is represented by, 
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{figures/stencil.png}
+\caption{five point stencil}
+\label{fig:rline}
+\end{figure}
+\hspace{0.25cm}Using the above representation, the final equation can be written as,
+\begin{equation}
+\label{eq:fdm}
+         T_{i,j}=\frac{1}{4}(T_{i,j+1}+T_{i,j-1}+T_{i,j+1}+T_{i,j-1}) 
+\end{equation}
+
+\hspace{0.25cm}This equation is solved with the help of PETSc routines in Fortran programming language. A standard square domain with Dirichlet boundary condition is chosen and Gauss-Seidel iteration method is used for solving.
+    
 
 

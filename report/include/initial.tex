@@ -1,23 +1,76 @@
 % CREATED BY DAVID FRISK, 2015
 \chapter{Implementation}
+\hspace{0.25cm}This section provides a brief description of the 2D Laplace code. The code begins with including necessary files for this problems. For example, Line one includes the PETSc routines.  
 
-\section{My learning}
-\begin{itemize}
-  
-  
- 
-\end{itemize}
+\begin{lstlisting}
+#include <petsc/finclude/petscsys.h>
+#include <petsc/finclude/petscis.h>
+#include <petsc/finclude/petscvec.h>
+#include <petsc/finclude/petscdm.h>
+#include <petsc/finclude/petscdmda.h>
+\end{lstlisting}
 
-\section{Petsc learning}
+This code uses the Distributed arrays(DMDA) which implements the basic PETSc vector routine for regular rectangular grids. More information is provided in \cite{petsc}. The basic varibale declaration is given below. Here, da is used for the distributed array.
 
-\begin{itemize}
-  \item Perform standard installation.
-  \item dont forget to link the environment.
-  \item read the manual.
-  \item go through all the tutorial examples.
-  
- 
-\end{itemize}
+\begin{lstlisting}
+      MPI_Comm comm
+      Vec      X,Y,F,localX,Fold,Fnew
+      DM       da
+      PetscInt  Nx,Ny,N,mx,my,ifive,ithree
+      PetscBool  flg,nooutput
+      PetscReal   tol,error
+      PetscReal   fnorm,fnorm1
+      PetscInt            one
+      PetscInt            ncount
+      PetscScalar        mone
+      PetscErrorCode ierr
+\end{lstlisting}
+
+Every PETSc implemented code starts with,
+\begin{lstlisting}
+      call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
+\end{lstlisting}
+And ends with,
+\begin{lstlisting}
+      call PetscFinalize(ierr)
+\end{lstlisting}
+The above routine also initializes MPI. Every PETSc routine returns an integer which indicates whether the code contains an error. This check(in this case, ierr) must be added in all the routines. 
+\newpage
+The following code inputs the number of grids required in the x and y direction. The PetscOptionsGetInt routine is used to change values during run-time in the terminal. 
+\begin{lstlisting}
+      mx = 10
+      my = 10
+      call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
+     &                        '-mx',mx,flg,ierr)
+      call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
+     &                        '-my',my,flg,ierr)
+\end{lstlisting}
+The Distributed array for to manage parallel grid and vector is initialized through,
+\begin{lstlisting}
+      Nx = PETSC_DECIDE
+      Ny = PETSC_DECIDE
+      call DMDACreate2d(comm,DM_BOUNDARY_NONE,DM_BOUNDARY_NONE,         &
+     &     DMDA_STENCIL_STAR,mx,my,Nx,Ny,one,one,                        &
+     &     PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da,ierr)
+\end{lstlisting}
+The above grid creates a 2D grid in parallel. DM\_BOUNDARY\_NONE represents the non usage of ghost nodes. DMDA\_STENCIL\_STAR represents a stencil arrangement without the corner nodes. Nx,Ny allow Petsc to decide how the partitioning of the nodes is performed globally. The next input is the degree of freedom(one in this case). Further, the stencil width(one) is input. The stencil width one equates to a standard 5-point stencil. The next two inputs represent the arrays containing the number of nodes in each direction(this input is optional). the next value stores the distributed array structure(da).
+\begin{lstlisting}
+      call DMCreateGlobalVector(da,X,ierr)
+      call DMCreateLocalVector(da,localX,ierr)
+\end{lstlisting}
+DMCreateGlobalVector creates a global vector X without considering the ghost nodes. DMCreateLocalVector creates a local vector localX with ghost nodes.
+\begin{lstlisting}
+      call FormInitialGuess(X,ierr)
+      call ComputeFunction(X,F,ierr)
+\end{lstlisting}
+The above mentioned subroutines were created for this problem. FormInitialGuess takes the global vector, assigns the boundary conditions and initial guess in the domain. The implementation is provided in the code. ComputeFunction computes the initialized X for the discretized Laplace equation(\ref{eq:fdm}) and produces the solution vector F. More details on this implementation can be understood through the code. 
+
+\begin{lstlisting}
+      call DMDestroy(da,ierr)
+      call VecDestroy(localX,ierr)
+      call VecDestroy(X,ierr)
+\end{lstlisting}
+All PETSc objects must be destroyed in the end of the program. 
 
 
 
