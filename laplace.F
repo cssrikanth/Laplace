@@ -45,7 +45,7 @@
 
       PetscInt  Nx,Ny,N,mx,my,ifive,ithree
       PetscBool  flg,nooutput
-      
+      real ::  beg_cpu_time, end_cpu_time
 
       PetscReal   tol,error
       PetscReal   fnorm,fnorm1
@@ -62,14 +62,15 @@
       ifive          = 5
       ithree         = 3
       ncount	    = 1
+      call cpu_time (beg_cpu_time)
       call PetscInitialize(PETSC_NULL_CHARACTER,ierr)
       comm = PETSC_COMM_WORLD
 
 !  Initialize problem parameters
 
 !
-      mx = 10
-      my = 10
+      mx = 1000
+      my = 1000
       call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
      &                        '-mx',mx,flg,ierr)
       call PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,    &
@@ -163,7 +164,7 @@
  
 
       write(6,100) ncount
- 100  format('Number iterations =',I4)
+ 100  format('Number iterations =',I8)
 !       call VecView(F,PETSC_VIEWER_STDOUT_WORLD,ierr)
 
 !  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -180,6 +181,8 @@
       
        call DMDestroy(da,ierr)
        call PetscFinalize(ierr)
+       call cpu_time (end_cpu_time)
+       write (*, *) 'run time:',end_cpu_time - beg_cpu_time
        end
 
 ! -------------------------------------------------------------------
